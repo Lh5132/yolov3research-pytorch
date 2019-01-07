@@ -1,12 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-from tensorboardX import SummaryWriter
-import cv2
-import torchvision.transforms as transforms
-import matplotlib.pyplot as plt
-import time
 
 # 定义C-B-L卷积三明治
 class Conv2D_BN_Leaky(nn.Module):
@@ -190,12 +184,9 @@ def yolo_loss(out_put,y_true,num_classes,CUDA):
         wh_loss = F.smooth_l1_loss(X[...,2:4,:,:],Y[...,2:4,:,:],reduction='none')*object_mask
         confidence_loss = F.binary_cross_entropy_with_logits(X[...,4,:,:],Y[...,4,:,:],reduction='none')
         cla_loss = F.binary_cross_entropy_with_logits(X[...,5:,:,:],Y[...,5:,:,:],reduction='none')*object_mask
-        loss += xy_loss.sum()+wh_loss.sum()+confidence_loss.sum()+cla_loss.sum()
-        print('loss:{:<10.3f}'.format(loss),'xy_loss:{:<10.3f}'.format(xy_loss.sum()),
+        scal_loss = xy_loss.sum()+wh_loss.sum()+confidence_loss.sum()+cla_loss.sum()
+        loss += scal_loss
+        print('loss:{:<10.3f}'.format(scal_loss),'xy_loss:{:<10.3f}'.format(xy_loss.sum()),
               'wh_loss:{:<10.3f}'.format(wh_loss.sum()),'confidence_loss:{:<10.3f}'.format(confidence_loss.sum()),
               'cla_loss:{:<10.3f}'.format(cla_loss.sum()))
     return loss
-
-
-
-

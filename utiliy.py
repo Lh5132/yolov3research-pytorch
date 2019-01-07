@@ -220,14 +220,6 @@ def data_generator(annotation_lines,input_shape,anchors, num_classes,batch_size,
     X = torch.from_numpy(image)
     return X,y_true
 
-
-
-
-
-
-
-
-
 # test
 # with open('test.txt') as f:
 #     lines_train = f.readlines()
