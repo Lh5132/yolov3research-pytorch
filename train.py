@@ -1,8 +1,8 @@
 import torch
 import torch.nn.functional as F
 import numpy as np
-from utiliy import data_generator,eval
-from model import yolo_body,yolo_loss
+from yolo.utiliy import data_generator,eval
+from yolo.model import yolo_body,yolo_loss
 
 
 def train(yolo_model,feeeze_body,epoche,batch_size,annotations,val,

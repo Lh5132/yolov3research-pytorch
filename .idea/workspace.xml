@@ -1,23 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="48e6109b-7f06-419d-8db8-5a9f81386645" name="Default" comment="no">
+    <list default="true" id="48e6109b-7f06-419d-8db8-5a9f81386645" name="Default" comment="update">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/a.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_test.txt" beforeDir="false" afterPath="$PROJECT_DIR$/data_test.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_train.txt" beforeDir="false" afterPath="$PROJECT_DIR$/data_train.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_val.txt" beforeDir="false" afterPath="$PROJECT_DIR$/data_val.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test1.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/model.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_data/test.txt" beforeDir="false" afterPath="$PROJECT_DIR$/train_data/test.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_data/train.txt" beforeDir="false" afterPath="$PROJECT_DIR$/train_data/train.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_data/train_classes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/train_data/train_classes.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_data/trainval.txt" beforeDir="false" afterPath="$PROJECT_DIR$/train_data/trainval.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_data/val.txt" beforeDir="false" afterPath="$PROJECT_DIR$/train_data/val.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utiliy.py" beforeDir="false" afterPath="$PROJECT_DIR$/utiliy.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/yolo_anchors.txt" beforeDir="false" afterPath="$PROJECT_DIR$/yolo_anchors.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utiliy.py" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -54,30 +42,6 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/model.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="314">
-              <caret line="219" column="15" selection-start-line="219" selection-start-column="15" selection-end-line="219" selection-end-column="15" />
-              <folding>
-                <element signature="e#0#12#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/utiliy.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-200">
-              <caret line="228" column="4" selection-start-line="228" selection-start-column="4" selection-end-line="228" selection-end-column="4" />
-              <folding>
-                <element signature="e#0#18#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="323">
@@ -89,8 +53,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/train.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="589">
-              <caret line="61" column="15" lean-forward="true" selection-start-line="61" selection-start-column="15" selection-end-line="61" selection-end-column="15" />
+            <state relative-caret-position="228">
+              <caret line="12" column="43" selection-start-line="12" selection-start-column="43" selection-end-line="12" selection-end-column="43" />
               <folding>
                 <element signature="e#132#144#0" expanded="true" />
               </folding>
@@ -149,6 +113,7 @@
     </findStrings>
   </component>
   <component name="Git.Settings">
+    <option name="UPDATE_TYPE" value="REBASE" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="IdeDocumentHistory">
@@ -173,8 +138,8 @@
         <option value="$PROJECT_DIR$/data_train.txt" />
         <option value="$PROJECT_DIR$/model.py" />
         <option value="$PROJECT_DIR$/data_val.txt" />
-        <option value="$PROJECT_DIR$/train.py" />
         <option value="$PROJECT_DIR$/utiliy.py" />
+        <option value="$PROJECT_DIR$/train.py" />
       </list>
     </option>
   </component>
@@ -439,7 +404,7 @@
       <workItem from="1546848452060" duration="1622000" />
       <workItem from="1546850117530" duration="5887000" />
       <workItem from="1547000650823" duration="1181000" />
-      <workItem from="1547006171311" duration="9823000" />
+      <workItem from="1547006171311" duration="10663000" />
     </task>
     <task id="LOCAL-00001" summary="no">
       <created>1546851763572</created>
@@ -448,11 +413,25 @@
       <option name="project" value="LOCAL" />
       <updated>1546851763572</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="no">
+      <created>1547025223075</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1547025223075</updated>
+    </task>
+    <task id="LOCAL-00003" summary="update">
+      <created>1547025627708</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1547025627708</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="46145000" />
+    <option name="totallyTimeSpent" value="46985000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -467,12 +446,12 @@
     <frame x="-7" y="-7" width="1550" height="848" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" weight="0.36997318" />
-      <window_info id="Structure" order="1" visible="true" weight="0.25268096" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.36997318" />
+      <window_info id="Structure" order="1" weight="0.25268096" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32922733" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3282123" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.3282123" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.39664805" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -480,7 +459,7 @@
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" weight="0.32922733" />
       <window_info anchor="bottom" id="Terminal" order="8" weight="0.32914925" />
       <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.50067025" side_tool="true" weight="0.32960895" />
-      <window_info anchor="bottom" id="Version Control" order="10" sideWeight="0.49932975" weight="0.32960895" />
+      <window_info active="true" anchor="bottom" id="Version Control" order="10" sideWeight="0.49932975" visible="true" weight="0.3282123" />
       <window_info anchor="bottom" id="Python Console" order="11" sideWeight="0.49932975" weight="0.32960895" />
       <window_info anchor="bottom" id="Concurrent Activities Diagram" order="12" visible="true" weight="0.32922733" />
       <window_info anchor="bottom" id="Database Changes" order="13" />
@@ -537,8 +516,10 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_CLEANUP_BEFORE_PROJECT_COMMIT" value="true" />
     <MESSAGE value="no" />
-    <option name="LAST_COMMIT_MESSAGE" value="no" />
+    <MESSAGE value="update" />
+    <option name="LAST_COMMIT_MESSAGE" value="update" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -898,8 +879,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/train.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="589">
-          <caret line="61" column="15" lean-forward="true" selection-start-line="61" selection-start-column="15" selection-end-line="61" selection-end-column="15" />
+        <state relative-caret-position="228">
+          <caret line="12" column="43" selection-start-line="12" selection-start-column="43" selection-end-line="12" selection-end-column="43" />
           <folding>
             <element signature="e#132#144#0" expanded="true" />
           </folding>
