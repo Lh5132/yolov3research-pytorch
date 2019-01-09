@@ -5,7 +5,6 @@ from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 import torch
 import cv2
 from yolo.model import yolo_loss
-
 from data_aug.data_aug import *
 from data_aug.bbox_util import *
 
