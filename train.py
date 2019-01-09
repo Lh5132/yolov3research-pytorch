@@ -47,10 +47,10 @@ def train(yolo_model,feeeze_body,epoche,batch_size,annotations,val,
             optimizer.step()
             torch.cuda.empty_cache()
             losses.append(loss)
-        map,mar = eval(yolo_model,val,input_shape,batch_size, anchors,classes,CUDA)
+        map,mar,val_loss = eval(yolo_model,val,input_shape,batch_size, anchors,classes,loss_function,CUDA)
         plt.plot(losses)
         plt.show()
-        scheduler.step(map)
+        scheduler.step(val_loss)
         map_list.append(map)
         if len(map_list) >= 8 and early_stop(map_list):
             break

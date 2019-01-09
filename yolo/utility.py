@@ -225,7 +225,7 @@ def data_generator(annotation_lines,input_shape,anchors, num_classes,batch_size,
     X = torch.from_numpy(image)
     return X,y_true,ratio
 
-def eval(model,val,input_shape,batch_size, anchors,classes,CUDA):
+def eval(model,val,input_shape,batch_size, anchors,classes,loss_function,CUDA):
     model.eval()
     val_lines = open(val,'r').readlines()
     if '\n' in val_lines:
@@ -238,6 +238,7 @@ def eval(model,val,input_shape,batch_size, anchors,classes,CUDA):
     for i in classes:
         precision[i] = []
         recall[i] = []
+    loss = 0
     for step in range(steps):
         sys.stdout.write('\r')
         sys.stdout.write("evaluating validation data...%d//%d" % (int(step + 1), int(steps)))
@@ -247,7 +248,8 @@ def eval(model,val,input_shape,batch_size, anchors,classes,CUDA):
             X = X.cuda()
         with torch.no_grad():
             out_puts = model(X)
-        torch.cuda.empty_cache()
+        loss += yolo_loss(out_puts,y_true,num_classes,CUDA,
+                          loss_function=loss_function, print_loss= False)
         out_box, out_score, out_class = convert_yolo_outputs(out_puts, input_shape, ratio, anchors,
                                                                   classes, confidence=0.05, NMS=0.5, CUDA=True)
         for k, v in enumerate(val_lines[step * batch_size:(step + 1) * batch_size]):
@@ -286,7 +288,7 @@ def eval(model,val,input_shape,batch_size, anchors,classes,CUDA):
         ar.append(r)
         print(k, 'AP:', '%.3f' % (p), 'AR:', '%.3f' % (r))
     print('mAP :', '%.3f' % float(sum(ap)/len(ap)), 'mAR:', '%.3f' % float(sum(ar)/len(ar)))
-    return sum(ap)/len(ap),sum(ar)/len(ar)
+    return sum(ap)/len(ap),sum(ar)/len(ar),loss/steps
 
 
 
