@@ -225,10 +225,8 @@ def data_generator(annotation_lines,input_shape,anchors, num_classes,batch_size,
     X = torch.from_numpy(image)
     return X,y_true,ratio
 
-def eval(model,val,input_shape,batch_size, anchors,classes,CUDA,
-         optimizer = None,loss_function = None,train = False):
-    if train == False:
-        model.eval()
+def eval(model,val,input_shape,batch_size, anchors,classes,CUDA):
+    model.eval()
     val_lines = open(val,'r').readlines()
     if '\n' in val_lines:
         val_lines.remove('\n')
@@ -244,17 +242,12 @@ def eval(model,val,input_shape,batch_size, anchors,classes,CUDA,
         sys.stdout.write('\r')
         sys.stdout.write("evaluating validation data...%d//%d" % (int(step + 1), int(steps)))
         sys.stdout.flush()
-        if train == True:
-            optimizer.zero_grad()
         X, y_true,ratio = data_generator(val_lines, input_shape, anchors, num_classes, batch_size, step)
         if CUDA:
             X = X.cuda()
-        out_puts = model(X)
-        if train == True:
-            loss = yolo_loss(out_puts, y_true, num_classes, CUDA, loss_function=loss_function,print_loss = False)
-            loss.backward()
-            optimizer.step()
-            torch.cuda.empty_cache()
+        with torch.no_grad():
+            out_puts = model(X)
+        torch.cuda.empty_cache()
         out_box, out_score, out_class = convert_yolo_outputs(out_puts, input_shape, ratio, anchors,
                                                                   classes, confidence=0.05, NMS=0.5, CUDA=True)
         for k, v in enumerate(val_lines[step * batch_size:(step + 1) * batch_size]):
@@ -282,6 +275,8 @@ def eval(model,val,input_shape,batch_size, anchors,classes,CUDA,
                 else:
                     recall[gt_classes[i]].append(0)
     print('\n')
+    torch.cuda.empty_cache()
+    model.train()
     ap = []
     ar = []
     for k in precision.keys():

@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import model
+from yolo import model
 import time
 import cv2
 import numpy as np
-from utiliy import convert_yolo_outputs,convert_ground_truth,resize,get_input_data
+from yolo.utility import convert_yolo_outputs,convert_ground_truth,resize,get_input_data
 import matplotlib.pyplot as plt
 
 # torch.cuda.empty_cache()
