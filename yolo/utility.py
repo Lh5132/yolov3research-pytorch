@@ -255,8 +255,8 @@ def eval(model,val,input_shape,batch_size, anchors,classes,CUDA,
             loss.backward()
             optimizer.step()
             torch.cuda.empty_cache()
-        out_box, out_score, out_class = convert_yolo_outputs(out_puts, (416, 416), ratio, anchors,
-                                                                  classes, confidence=0.8, NMS=0.3, CUDA=True)
+        out_box, out_score, out_class = convert_yolo_outputs(out_puts, input_shape, ratio, anchors,
+                                                                  classes, confidence=0.05, NMS=0.5, CUDA=True)
         for k, v in enumerate(val_lines[step * batch_size:(step + 1) * batch_size]):
             gt_boxes = []
             gt_classes = []
