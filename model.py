@@ -167,8 +167,30 @@ class yolo_body(nn.Module):
                 print('layer:',k,'miss match')
         self.load_state_dict(model_dic)
 
+def GHMC_loss(out_put,y_true):
+    out_put = out_put.reshape(-1)
+    y_true = y_true.reshape(-1)
+    bins = 10
+    edges = [float(x) / bins for x in range(bins + 1)]
+    edges[-1] += 1e-6
+    weights = torch.zeros_like(out_put)
+    g = torch.abs(torch.sigmoid(out_put) - y_true)
+    tot = len(out_put)
+    for i in range(bins):
+        inds = (g >= edges[i]) & (g < edges[i + 1])
+        num_in_bin = inds.sum().item()
+        if num_in_bin > 0:
+            weights[inds] = tot / num_in_bin
+    weights /= 10
+    loss = F.binary_cross_entropy_with_logits(out_put,y_true,weight=weights,reduction='none')
+    return loss
 
-def yolo_loss(out_put,y_true,num_classes,CUDA):
+def focal_loss(out_put,y_true):
+    loss = ((torch.sigmoid(out_put))**2*(1-y_true)+ (1-torch.sigmoid(out_put))**2*y_true)\
+            *F.binary_cross_entropy_with_logits(out_put, y_true, reduction='none')
+    return loss
+
+def yolo_loss(out_put,y_true,num_classes,CUDA,loss_function = 'None',print_loss = True):
     m = len(out_put)
     loss = 0
 
@@ -182,11 +204,17 @@ def yolo_loss(out_put,y_true,num_classes,CUDA):
         object_mask = torch.unsqueeze(Y[...,4,:,:],2)
         xy_loss = F.binary_cross_entropy_with_logits(X[...,:2,:,:],Y[...,:2,:,:],reduction='none')*object_mask
         wh_loss = F.smooth_l1_loss(X[...,2:4,:,:],Y[...,2:4,:,:],reduction='none')*object_mask
-        confidence_loss = F.binary_cross_entropy_with_logits(X[...,4,:,:],Y[...,4,:,:],reduction='none')
+        if loss_function == 'focal_loss':
+            confidence_loss = focal_loss(X[...,4,:,:],Y[...,4,:,:])
+        elif loss_function == 'GHM_loss':
+            confidence_loss = GHMC_loss(X[..., 4, :, :], Y[..., 4, :, :])
+        else:
+            confidence_loss = F.binary_cross_entropy_with_logits(X[...,4,:,:],Y[...,4,:,:],reduction='none')
         cla_loss = F.binary_cross_entropy_with_logits(X[...,5:,:,:],Y[...,5:,:,:],reduction='none')*object_mask
         scal_loss = xy_loss.sum()+wh_loss.sum()+confidence_loss.sum()+cla_loss.sum()
         loss += scal_loss
-        print('loss:{:<10.3f}'.format(scal_loss),'xy_loss:{:<10.3f}'.format(xy_loss.sum()),
-              'wh_loss:{:<10.3f}'.format(wh_loss.sum()),'confidence_loss:{:<10.3f}'.format(confidence_loss.sum()),
-              'cla_loss:{:<10.3f}'.format(cla_loss.sum()))
+        if print_loss:
+            print('loss:{:<10.3f}'.format(scal_loss),'xy_loss:{:<10.3f}'.format(xy_loss.sum()),
+                  'wh_loss:{:<10.3f}'.format(wh_loss.sum()),'confidence_loss:{:<10.3f}'.format(confidence_loss.sum()),
+                  'cla_loss:{:<10.3f}'.format(cla_loss.sum()))
     return loss

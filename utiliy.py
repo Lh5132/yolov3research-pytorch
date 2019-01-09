@@ -4,6 +4,7 @@ from PIL import Image,ImageDraw
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 import torch
 import cv2
+from model import yolo_loss
 
 from data_aug.data_aug import *
 from data_aug.bbox_util import *
@@ -103,9 +104,9 @@ def IOU(box1, box2):
     s1 = abs(bottom1 - top1) * abs(right1 - left1)
     s2 = abs(bottom2 - top2) * abs(right2 - left2)
     cross = max((min(bottom1, bottom2) - max(top1, top2)), 0) * max((min(right1, right2) - max(left1, left2)), 0)
-    return cross / (s1 + s2 - cross)
+    return cross / (s1 + s2 - cross) if (s1 + s2 - cross)!=0 else 0
 
-def convert_yolo_outputs(out_puts,input_shape,ratio, anchors, classes,confidence = 0.05,NMS = 0.5,CUDA= True):
+def convert_yolo_outputs(out_puts, input_shape, ratio, anchors, classes, confidence = 0.05, NMS = 0.5, CUDA= True):
     '''convert yolo out puts into object boxes with following functions:
            bx = sigmoid(tx) + cx
            by = sigmoid(ty) + cy
@@ -127,76 +128,81 @@ def convert_yolo_outputs(out_puts,input_shape,ratio, anchors, classes,confidence
            object boxes: list of boxes
 
            '''
-    anchor_mask = anchor_mask = [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
+    anchor_mask = [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
     num_layers = len(anchor_mask)
-    num_anchors = len(anchors)//3
     num_classes = len(classes)
     input_shape = np.array(input_shape)
-    out_boxes = []
-    out_scores = []
-    out_classes = []
-    for i in range(num_layers):
-        scal = out_puts[i].cpu().data.shape[-1]
-        pred = out_puts[i].cpu().data.reshape(-1,3,num_classes+5,scal,scal)
-        anchor = [anchors[anchor_mask[i][k]] for k in range(3)]
-        anchor = torch.FloatTensor(anchor)
-        grid = np.meshgrid(range(scal),range(scal))
-        grid = torch.FloatTensor(grid[::-1]).unsqueeze(0).repeat(3,1,1,1).unsqueeze(0)
-        # 用GPU完成张量运算
-        if CUDA:
-            pred = pred.cuda()
-            anchor = anchor.cuda()
-            grid = grid.cuda()
-        # 计算预测框包含目标的置信度score
-        confidence_prob =  torch.sigmoid(pred[..., 4, :, :]).unsqueeze(2)
-        object_mask =  (confidence_prob > confidence).float()
-        cla_prob =  torch.sigmoid(pred[..., 5:, :, :])
-        scores = cla_prob * confidence_prob * object_mask
-        # 计算预测框中心点坐标x,y
-        x_y = (torch.sigmoid(pred[..., 0:2, :, :]) + grid) * object_mask / scal * input_shape[0] / ratio
-        # 计算预测框的长宽h,w
-        x = anchor[:, 0].view(-1, 1).repeat(1, scal * scal).reshape(3, scal, scal).unsqueeze(1)
-        y = anchor[:, 1].view(-1, 1).repeat(1, scal * scal).reshape(3, scal, scal).unsqueeze(1)
-        anchor_xy = torch.cat((x, y), 1)
-        w_h = torch.exp(pred[..., 2:4, :, :]) * anchor_xy * object_mask / ratio
-        # 转换成需要的输出数据格式
-        scores_data = scores.cpu().data.numpy()
-        x_y_data = x_y.cpu().data.numpy()
-        w_h_data = w_h.cpu().data.numpy()
-        object_mask = object_mask.cpu().data.numpy()
-        position = np.argwhere(object_mask > 0)
-        for p in position:
-            b, l, c, r, cl = p
-            score = np.max(scores_data[b, l, :, r, cl])
-            cla_id = np.argmax(scores_data[b, l, :, r, cl])
-            xy = x_y_data[b, l, :, r, cl]
-            wh = w_h_data[b, l, :, r, cl]
-            cla = classes[cla_id]
-            xmin = max(int(xy[0] - wh[0] / 2), 0)
-            xmax = min(int(xy[0] + wh[0] / 2), int(input_shape[0]/ratio))
-            ymin = max(int(xy[1] - wh[1] / 2), 0)
-            ymax = min(int(xy[1] + wh[1] / 2), int(input_shape[1]/ratio))
-            out_boxes.append([xmin, ymin, xmax, ymax])
-            out_scores.append(score)
-            out_classes.append(cla)
-    if NMS:
-        length = len(out_scores)
-        remove = []
-        for i in range(length):
-            for j in range(length):
-                if IOU(out_boxes[i],out_boxes[j])> NMS and out_scores[i] < out_scores[j]:
-                    remove.append(i)
-                    break
-        for r in remove:
-            out_boxes.pop(r-length)
-            out_scores.pop(r-length)
-            out_classes.pop(r-length)
-    return out_boxes,out_scores,out_classes
+    out_box = []
+    out_scor = []
+    out_class = []
+    for k in range(out_puts[0].shape[0]):
+        out_boxes = []
+        out_scores = []
+        out_classes = []
+        for i in range(num_layers):
+            scal = out_puts[i].cpu().data.shape[-1]
+            pred = out_puts[i].cpu().data.reshape(-1,3,num_classes+5,scal,scal)[k,...].unsqueeze(0)
+            anchor = [anchors[anchor_mask[i][k]] for k in range(3)]
+            anchor = torch.FloatTensor(anchor)
+            grid = np.meshgrid(range(scal),range(scal))
+            grid = torch.FloatTensor(grid[::-1]).unsqueeze(0).repeat(3,1,1,1).unsqueeze(0)
+            # 用GPU完成张量运算
+            if CUDA:
+                pred = pred.cuda()
+                anchor = anchor.cuda()
+                grid = grid.cuda()
+            # 计算预测框包含目标的置信度score
+            confidence_prob =  torch.sigmoid(pred[..., 4, :, :]).unsqueeze(2)
+            object_mask =  (confidence_prob > confidence).float()
+            cla_prob =  torch.sigmoid(pred[..., 5:, :, :])
+            scores = cla_prob * confidence_prob * object_mask
+            # 计算预测框中心点坐标x,y
+            x_y = (torch.sigmoid(pred[..., 0:2, :, :]) + grid) * object_mask / scal * input_shape[0] / ratio
+            # 计算预测框的长宽h,w
+            x = anchor[:, 0].view(-1, 1).repeat(1, scal * scal).reshape(3, scal, scal).unsqueeze(1)
+            y = anchor[:, 1].view(-1, 1).repeat(1, scal * scal).reshape(3, scal, scal).unsqueeze(1)
+            anchor_xy = torch.cat((x, y), 1)
+            w_h = torch.exp(pred[..., 2:4, :, :]) * anchor_xy * object_mask / ratio
+            # 转换成需要的输出数据格式
+            scores_data = scores.cpu().data.numpy()
+            x_y_data = x_y.cpu().data.numpy()
+            w_h_data = w_h.cpu().data.numpy()
+            object_mask = object_mask.cpu().data.numpy()
+            position = np.argwhere(object_mask > 0)
+            for p in position:
+                b, l, c, r, cl = p
+                score = np.max(scores_data[b, l, :, r, cl])
+                cla_id = np.argmax(scores_data[b, l, :, r, cl])
+                xy = x_y_data[b, l, :, r, cl]
+                wh = w_h_data[b, l, :, r, cl]
+                cla = classes[cla_id]
+                xmin = max(int(xy[0] - wh[0] / 2), 0)
+                xmax = min(int(xy[0] + wh[0] / 2), int(input_shape[1]/ratio))
+                ymin = max(int(xy[1] - wh[1] / 2), 0)
+                ymax = min(int(xy[1] + wh[1] / 2), int(input_shape[0]/ratio))
+                out_boxes.append([xmin, ymin, xmax, ymax])
+                out_scores.append(score)
+                out_classes.append(cla)
+        if NMS:
+            length = len(out_scores)
+            remove = []
+            for i in range(length):
+                for j in range(length):
+                    if IOU(out_boxes[i],out_boxes[j])> NMS and out_scores[i] < out_scores[j]:
+                        remove.append(i)
+                        break
+            for r in remove:
+                out_boxes.pop(r-length)
+                out_scores.pop(r-length)
+                out_classes.pop(r-length)
+        out_box.append(out_boxes)
+        out_scor.append(out_scores)
+        out_class.append(out_classes)
+    return out_box,out_scor,out_class
 
 def data_generator(annotation_lines,input_shape,anchors, num_classes,batch_size,step):
     image = []
     gt_boxes = []
-
     for annotation in annotation_lines[step*batch_size:(step+1)*batch_size]:
         annotation = annotation.strip()
         img = cv2.imread(annotation.split()[0])[:,:,::-1]
@@ -218,7 +224,77 @@ def data_generator(annotation_lines,input_shape,anchors, num_classes,batch_size,
     image = np.array(image)
     y_true = convert_ground_truth(gt_boxes,input_shape,anchors,num_classes,batch_size)
     X = torch.from_numpy(image)
-    return X,y_true
+    return X,y_true,ratio
+
+def eval(model,val,input_shape,batch_size, anchors,classes,CUDA,
+         optimizer = None,loss_function = None,train = False):
+    if train == False:
+        model.eval()
+    val_lines = open(val,'r').readlines()
+    if '\n' in val_lines:
+        val_lines.remove('\n')
+    np.random.shuffle(val_lines)
+    steps = len(val_lines)//batch_size
+    num_classes = len(classes)
+    precision = {}
+    recall = {}
+    for i in classes:
+        precision[i] = []
+        recall[i] = []
+    for step in range(steps):
+        sys.stdout.write('\r')
+        sys.stdout.write("evaluating validation data...%d//%d" % (int(step + 1), int(steps)))
+        sys.stdout.flush()
+        if train == True:
+            optimizer.zero_grad()
+        X, y_true,ratio = data_generator(val_lines, input_shape, anchors, num_classes, batch_size, step)
+        if CUDA:
+            X = X.cuda()
+        out_puts = model(X)
+        if train == True:
+            loss = yolo_loss(out_puts, y_true, num_classes, CUDA, loss_function=loss_function,print_loss = False)
+            loss.backward()
+            optimizer.step()
+            torch.cuda.empty_cache()
+        out_box, out_score, out_class = convert_yolo_outputs(out_puts, (416, 416), ratio, anchors,
+                                                                  classes, confidence=0.8, NMS=0.3, CUDA=True)
+        for k, v in enumerate(val_lines[step * batch_size:(step + 1) * batch_size]):
+            gt_boxes = []
+            gt_classes = []
+            for gt in v.strip().split(' ')[1:]:
+                gt_boxes.append(list(map(int, gt.split(',')[:-1])))
+                gt_classes.append(classes[int(gt.split(',')[-1].strip())])
+            out_classes = out_class[k]
+            out_boxes = out_box[k]
+            # 计算ap
+            for i in range(len(out_classes)):
+                for j in range(len(gt_classes)):
+                    if IOU(gt_boxes[j], out_boxes[i]) > 0.5 and gt_classes[j] == out_classes[i]:
+                        precision[out_classes[i]].append(1)
+                        break
+                else:
+                    precision[out_classes[i]].append(0)
+                # 计算ar
+            for i in range(len(gt_classes)):
+                for j in range(len(out_classes)):
+                    if IOU(gt_boxes[i], out_boxes[j]) > 0.5 and out_classes[j] == gt_classes[i]:
+                        recall[gt_classes[i]].append(1)
+                        break
+                else:
+                    recall[gt_classes[i]].append(0)
+    print('\n')
+    ap = []
+    ar = []
+    for k in precision.keys():
+        p = sum(precision[k]) / len(precision[k]) if len(precision[k]) != 0 else 0
+        r = sum(recall[k]) / len(recall[k]) if len(recall[k]) != 0 else 0
+        ap.append(p)
+        ar.append(r)
+        print(k, 'AP:', '%.3f' % (p), 'AR:', '%.3f' % (r))
+    print('mAP :', '%.3f' % float(sum(ap)/len(ap)), 'mAR:', '%.3f' % float(sum(ar)/len(ar)))
+    return sum(ap)/len(ap),sum(ar)/len(ar)
+
+
 
 # test
 # with open('test.txt') as f:

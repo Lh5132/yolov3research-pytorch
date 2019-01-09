@@ -40,11 +40,9 @@ light90
 switch
 ground-wire
 knife-switch
-ladder2fen
 ladder2he
 clip2fen
 HandcartTestPosition
-HandcartWorkingPosition
 0
 1
 2
