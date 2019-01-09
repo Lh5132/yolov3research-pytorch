@@ -4,10 +4,10 @@ from PIL import Image,ImageDraw
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 import torch
 import cv2
-from model import yolo_loss
+from yolo.model import yolo_loss
 
-from ..data_aug.data_aug import *
-from ..data_aug.bbox_util import *
+from data_aug.data_aug import *
+from data_aug.bbox_util import *
 
 def convert_ground_truth(gt_boxes, input_shape, anchors, num_classes,batch_size):
     '''convert ground truth boxes into yolo_outputs frame as following functions:
