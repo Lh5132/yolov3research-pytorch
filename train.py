@@ -46,7 +46,7 @@ def train(yolo_model,feeeze_body,epoche,batch_size,annotations,val,
             loss.backward()
             optimizer.step()
             torch.cuda.empty_cache()
-            losses.append(loss)
+            losses.append(loss.cpu().item())
         map,mar,val_loss = eval(yolo_model,val,input_shape,batch_size, anchors,classes,loss_function,CUDA)
         plt.plot(losses)
         plt.show()

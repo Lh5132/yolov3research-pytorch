@@ -199,7 +199,7 @@ def convert_yolo_outputs(out_puts, input_shape, ratio, anchors, classes, confide
         out_class.append(out_classes)
     return out_box,out_scor,out_class
 
-def data_generator(annotation_lines,input_shape,anchors, num_classes,batch_size,step):
+def data_generator(annotation_lines,input_shape,anchors, num_classes,batch_size,step,rand = True):
     image = []
     gt_boxes = []
     for annotation in annotation_lines[step*batch_size:(step+1)*batch_size]:
@@ -208,14 +208,15 @@ def data_generator(annotation_lines,input_shape,anchors, num_classes,batch_size,
         boxes = np.array([np.array(box.split(',')) for box in annotation.split()[1:]],dtype=np.float32)
         img,ratio = resize(img,input_shape)
         boxes[...,:4] *=ratio
-        temp_boxes = np.array([[100,100,200,200,1]],dtype = np.float32)
-        transforms = Sequence([RandomHorizontalFlip(0.5), RandomRotate(10, remove=0.8),
-                               RandomScale(0.2, diff=True, remove=0.8), RandomShear(0.1),
-                               RandomTranslate(0.1, diff=True, remove=0.8), RandomHSV(20, 40, 40)])
-        if len(boxes) !=0:
-            img, boxes = transforms(img, boxes)
-        else:
-            img, temp_boxes = transforms(img, temp_boxes)
+        if rand:
+            temp_boxes = np.array([[100,100,200,200,1]],dtype = np.float32)
+            transforms = Sequence([RandomHorizontalFlip(0.5), RandomRotate(10, remove=0.8),
+                                   RandomScale(0.2, diff=True, remove=0.8), RandomShear(0.1),
+                                   RandomTranslate(0.1, diff=True, remove=0.8), RandomHSV(20, 40, 40)])
+            if len(boxes) !=0:
+                img, boxes = transforms(img, boxes)
+            else:
+                img, temp_boxes = transforms(img, temp_boxes)
 
         image_data = get_input_data(img)
         image.append(image_data)
@@ -235,23 +236,26 @@ def eval(model,val,input_shape,batch_size, anchors,classes,loss_function,CUDA):
     num_classes = len(classes)
     precision = {}
     recall = {}
+    if CUDA:
+        model.cuda()
     for i in classes:
         precision[i] = []
         recall[i] = []
     loss = 0
     for step in range(steps):
+        torch.cuda.empty_cache()
         sys.stdout.write('\r')
         sys.stdout.write("evaluating validation data...%d//%d" % (int(step + 1), int(steps)))
         sys.stdout.flush()
-        X, y_true,ratio = data_generator(val_lines, input_shape, anchors, num_classes, batch_size, step)
+        X, y_true,ratio = data_generator(val_lines, input_shape, anchors, num_classes, batch_size, step, rand = False)
         if CUDA:
             X = X.cuda()
         with torch.no_grad():
             out_puts = model(X)
-        loss += yolo_loss(out_puts,y_true,num_classes,CUDA,
-                          loss_function=loss_function, print_loss= False)
+        loss += yolo_loss(out_puts,y_true,num_classes,anchors,input_shape,CUDA,
+                          loss_function = 'None',print_loss = False)
         out_box, out_score, out_class = convert_yolo_outputs(out_puts, input_shape, ratio, anchors,
-                                                                  classes, confidence=0.05, NMS=0.5, CUDA=True)
+                                                                  classes, confidence=0.5, NMS=0.5, CUDA=True)
         for k, v in enumerate(val_lines[step * batch_size:(step + 1) * batch_size]):
             gt_boxes = []
             gt_classes = []
