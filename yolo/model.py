@@ -168,14 +168,14 @@ class yolo_body(nn.Module):
         self.load_state_dict(model_dic)
 
 def GHMC_loss(out_put,y_true):
-    out_put = out_put.reshape(-1)
-    y_true = y_true.reshape(-1)
     bins = 10
     edges = [float(x) / bins for x in range(bins + 1)]
     edges[-1] += 1e-6
     weights = torch.zeros_like(out_put)
     g = torch.abs(torch.sigmoid(out_put) - y_true)
-    tot = len(out_put)
+    tot = 1
+    for k in out_put.size():
+        tot *= k
     for i in range(bins):
         inds = (g >= edges[i]) & (g < edges[i + 1])
         num_in_bin = inds.sum().item()
