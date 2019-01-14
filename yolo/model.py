@@ -190,7 +190,7 @@ def focal_loss(out_put,y_true):
             *F.binary_cross_entropy_with_logits(out_put, y_true, reduction='none')
     return loss
 
-def yolo_loss(out_put,y_true,num_classes,CUDA,loss_function = 'None',print_loss = True):
+def yolo_loss(out_put,y_true,num_classes,anchors,input_shape,CUDA,loss_function = 'None',print_loss = True):
     m = len(out_put)
     loss = 0
 
@@ -198,19 +198,31 @@ def yolo_loss(out_put,y_true,num_classes,CUDA,loss_function = 'None',print_loss 
         scal = out_put[i].shape[-1]
         X = out_put[i].reshape(-1,3,num_classes+5,scal,scal)
         Y = torch.from_numpy(y_true[i])
+        anchor_mask = [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
+        anchor = [anchors[anchor_mask[i][n]] for n in range(3)]
+        anchor = torch.FloatTensor(anchor)
         if CUDA:
             X = X.cuda()
             Y = Y.cuda()
+            anchor = anchor.cuda()
+        x = anchor[:, 0].view(-1, 1).repeat(1, scal * scal).reshape(3, scal, scal).unsqueeze(1)
+        y = anchor[:, 1].view(-1, 1).repeat(1, scal * scal).reshape(3, scal, scal).unsqueeze(1)
+        anchor_xy = torch.cat((x, y), 1)
+        w_h = torch.exp(Y[..., 2:4, :, :]) * anchor_xy
+        boxes_loss_scal = 2 - w_h[...,0,:,:]*w_h[...,1,:,:]/(input_shape[0]*input_shape[1])
+        boxes_loss_scal = torch.unsqueeze(boxes_loss_scal, 2)
         object_mask = torch.unsqueeze(Y[...,4,:,:],2)
-        xy_loss = F.binary_cross_entropy_with_logits(X[...,:2,:,:],Y[...,:2,:,:],reduction='none')*object_mask
-        wh_loss = F.smooth_l1_loss(X[...,2:4,:,:],Y[...,2:4,:,:],reduction='none')*object_mask
+        xy_loss = F.binary_cross_entropy_with_logits(X[...,:2,:,:],Y[...,:2,:,:],reduction='none')*object_mask*boxes_loss_scal
+        wh_loss = F.mse_loss(X[...,2:4,:,:],Y[...,2:4,:,:],reduction='none')*object_mask*boxes_loss_scal
         if loss_function == 'focal_loss':
             confidence_loss = focal_loss(X[...,4,:,:],Y[...,4,:,:])
+            cla_loss = focal_loss(X[..., 5:, :, :], Y[..., 5:, :, :])*object_mask
         elif loss_function == 'GHM_loss':
             confidence_loss = GHMC_loss(X[..., 4, :, :], Y[..., 4, :, :])
+            cla_loss = GHMC_loss(X[...,5:,:,:],Y[...,5:,:,:])*object_mask
         else:
             confidence_loss = F.binary_cross_entropy_with_logits(X[...,4,:,:],Y[...,4,:,:],reduction='none')
-        cla_loss = F.binary_cross_entropy_with_logits(X[...,5:,:,:],Y[...,5:,:,:],reduction='none')*object_mask
+            cla_loss = F.binary_cross_entropy_with_logits(X[...,5:,:,:],Y[...,5:,:,:],reduction='none')*object_mask
         scal_loss = xy_loss.sum()+wh_loss.sum()+confidence_loss.sum()+cla_loss.sum()
         loss += scal_loss
         if print_loss:

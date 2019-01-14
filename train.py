@@ -42,7 +42,7 @@ def train(yolo_model,feeeze_body,epoche,batch_size,annotations,val,
                 X = X.cuda()
             optimizer.zero_grad()
             Y = yolo_model(X)
-            loss = yolo_loss(Y, y_true, num_classes, CUDA, loss_function = loss_function, print_loss=True)
+            loss = yolo_loss(Y, y_true, num_classes, anchors, input_shape, CUDA, loss_function = loss_function, print_loss=True)
             loss.backward()
             optimizer.step()
             torch.cuda.empty_cache()

@@ -141,7 +141,7 @@ def convert_yolo_outputs(out_puts, input_shape, ratio, anchors, classes, confide
         for i in range(num_layers):
             scal = out_puts[i].cpu().data.shape[-1]
             pred = out_puts[i].cpu().data.reshape(-1,3,num_classes+5,scal,scal)[k,...].unsqueeze(0)
-            anchor = [anchors[anchor_mask[i][k]] for k in range(3)]
+            anchor = [anchors[anchor_mask[i][n]] for n in range(3)]
             anchor = torch.FloatTensor(anchor)
             grid = np.meshgrid(range(scal),range(scal))
             grid = torch.FloatTensor(grid[::-1]).unsqueeze(0).repeat(3,1,1,1).unsqueeze(0)
