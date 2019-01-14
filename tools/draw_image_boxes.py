@@ -7,8 +7,7 @@ import colorsys
 #定义画框函数
 def draw_image_boxes(image,classes_path,out_boxes,out_classes,out_scores=[]):
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype(font='font/FiraMono-Medium.otf',
-                              size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
+    font = ImageFont.truetype(size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
     thickness = (image.size[0] + image.size[1]) // 300
     f = open('object_classes_all.txt', 'r')
     cla = f.readlines()
